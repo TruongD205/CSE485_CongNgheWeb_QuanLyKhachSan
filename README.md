@@ -1,59 +1,107 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏨 Hệ Thống Quản Lý Khách Sạn (Hotel Management System)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Dự án bài tập lớn / đồ án môn **Công nghệ Web (CSE485)** xây dựng bằng **Laravel Framework 12** và cơ sở dữ liệu **MySQL**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠 Yêu cầu môi trường (Prerequisites)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Trước khi tiến hành cài đặt, máy tính của bạn cần có sẵn:
+* **PHP >= 8.2**
+* **Composer** (bản 2.x trở lên)
+* **MySQL / MariaDB** (thông qua XAMPP, Laragon hoặc MySQL Server)
+* **Git**
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Hướng dẫn cài đặt và khởi chạy dự án
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Bước 1: Clone dự án về máy tính
+Mở Git Bash hoặc Terminal và chạy lệnh:
+```bash
+git clone https://github.com/TruongD205/CSE485_CongNgheWeb_QuanLyKhachSan.git
+cd CSE485_CongNgheWeb_QuanLyKhachSan
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Bước 2: Cài đặt các thư viện phụ thuộc (Composer)
+```bash
+composer install
+```
 
-## Laravel Sponsors
+### Bước 3: Cấu hình file môi trường (.env)
+1. Sao chép file cấu hình mẫu `.env.example` thành `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Mở file `.env` bằng trình soạn thảo (VS Code, Notepad...) và kiểm tra cấu hình kết nối CSDL:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=qlks
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+   > ⚠️ **Lưu ý:** Hãy mở **XAMPP Control Panel**, nhấn **Start MySQL**, sau đó vào phpMyAdmin (`http://localhost/phpmyadmin`) tạo một cơ sở dữ liệu mới có tên là **`qlks`** (nếu chưa có).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Bước 4: Tạo khóa bí mật cho ứng dụng (Application Key)
+```bash
+php artisan key:generate
+```
 
-### Premium Partners
+### Bước 5: Chạy Migration và nạp dữ liệu mẫu (Seeder)
+Lệnh này sẽ tự động khởi tạo tất cả các bảng trong CSDL và nạp sẵn dữ liệu mẫu về phòng, đơn đặt phòng và tài khoản quản trị:
+```bash
+php artisan migrate:fresh --seed
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Bước 6: Khởi chạy ứng dụng
+```bash
+php artisan serve
+```
+Sau khi server chạy, truy cập vào trình duyệt theo đường dẫn:  
+👉 **http://127.0.0.1:8000** (hoặc `http://localhost:8000`)
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🔑 Tài khoản đăng nhập thử nghiệm
 
-## Code of Conduct
+Hệ thống đã có sẵn 3 tài khoản mẫu được nạp từ Seeder:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Tên đăng nhập | Mật khẩu | Email | Vai trò |
+| :--- | :--- | :--- | :--- |
+| `truong` | `123456` | truong@gmail.com | Quản trị viên |
+| `dat` | `123456` | dat@gmail.com | Quản trị viên |
+| `kien` | `123456` | kien@gmail.com | Quản trị viên |
 
-## Security Vulnerabilities
+*(Bạn cũng có thể bấm vào nút **"Đăng ký ngay"** trên giao diện để tạo một tài khoản mới).*
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## ✨ Các chức năng chính của hệ thống
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. **Xác thực & Kiểm soát truy cập (Authentication & Access Control):**
+   * Đăng ký tài khoản mới, Đăng nhập, Đăng xuất an toàn.
+   * Middleware `CheckLogin` (`dangnhap`): Tự động chặn người chưa đăng nhập truy cập vào các trang nội bộ (phòng, đặt phòng).
+   * Middleware `CheckGuest` (`khach`): Tự động ngăn người đã đăng nhập quay lại form đăng nhập/đăng ký.
+
+2. **Quản lý phòng (Room Management - CRUD):**
+   * Xem danh sách tất cả phòng (có phân trang).
+   * Xem chi tiết từng phòng.
+   * Thêm phòng mới (Validate số phòng 3 chữ số, không trùng lặp).
+   * Sửa thông tin phòng (Số phòng, Loại phòng, Giá phòng, Sức chứa, Mô tả).
+   * Xóa phòng an toàn: Có cảnh báo và kiểm tra nếu phòng đang có khách ở thì không được xóa.
+
+3. **Quản lý đặt phòng (Booking Management - CRUD):**
+   * Xem danh sách các đơn đặt phòng.
+   * Thêm đơn đặt phòng mới: Tự động kiểm tra trùng lịch đặt phòng (tránh 2 khách cùng đặt 1 phòng trong cùng khoảng thời gian).
+   * Cập nhật trạng thái đơn đặt phòng (Đã đặt / Đang ở / Đã trả phòng).
+   * **Cơ chế tự động hóa:** Trạng thái phòng (`RoomStatus`) sẽ tự động cập nhật đồng bộ tương ứng theo trạng thái của các đơn đặt phòng.
+
+---
+
+## 📚 Thông tin công nghệ sử dụng
+* **Framework:** [Laravel 12](https://laravel.com)
+* **Frontend:** Blade Template, Bootstrap 5
+* **Database:** MySQL
+* **Kiến trúc:** MVC (Model - View - Controller)
