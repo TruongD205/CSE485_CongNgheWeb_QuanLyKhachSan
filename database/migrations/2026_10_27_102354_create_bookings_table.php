@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->integerIncrements('BookingID');
 
-            $table->unsignedInteger('RoomID');
+            $table->unsignedInteger('RoomID'); // só nguyên dương
 
             $table->string('GuestName');
             $table->string('GuestPhone');
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->date('CheckOutDate')->nullable();
 
             $table->enum('BookingStatus', ['0', '1', '2'])->default('0');
+            // mặc định 0 là đã xác nhận, 1 là đang ở, 2 là đã trả phòng
 
             $table->foreign('RoomID')->references('RoomID')->on('rooms')->onDelete('cascade');
         });

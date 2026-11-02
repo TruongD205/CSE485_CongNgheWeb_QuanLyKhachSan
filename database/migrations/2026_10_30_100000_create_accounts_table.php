@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('accounts', function (Blueprint $table) {
-            $table->integerIncrements('AccountID');
+            $table->integerIncrements('AccountID'); // khoá chính do có integerIncrements
 
-            $table->string('Username')->unique();
+            $table->string('Username')->unique(); // unique() ràng buộc ko cho tạo 2 tk có tên trùng nhau
 
             $table->string('Password');
 

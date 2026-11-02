@@ -17,6 +17,7 @@ class AccountSeeder extends Seeder
 
         foreach ($accounts as $account) {
             Account::updateOrCreate(
+                // dùng updateOrCreate mà ko dùng create vì cột Username là ràng buộc
                 ['Username' => $account['Username']],
                 [
                     'Password' => $account['Password'],

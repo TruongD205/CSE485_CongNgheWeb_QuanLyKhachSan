@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('RoomCapacity')->default(2);
 
             $table->enum('RoomStatus', ['0', '1', '2'])->default('0');
+            // mặc định 0 là trống, 1 là đã đặt, 2 là đang ở
 
             $table->text('RoomDescription')->nullable();
         });

@@ -14,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'dangnhap' => CheckLogin::class, // dòng này sẽ trỏ tới file CheckLogin
+            'dangnhap' => CheckLogin::class, // dòng này sẽ trỏ tới file CheckLogin do 
+            // đã khai báo use nên lúc cần dùng chỉ cần gọi mỗi CheckLogin là dc
             'khach' => CheckGuest::class,  // dòng này sẽ trỏ tới file CheckGuest
         ]);
     })

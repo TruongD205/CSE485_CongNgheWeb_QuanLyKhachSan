@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/register');
@@ -20,7 +22,12 @@ Route::middleware('dangnhap')->group(function () {
 
     Route::resource('rooms', RoomController::class);
     Route::resource('bookings', BookingController::class);
+    Route::resource('services', ServiceController::class);
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
 
     Route::get('rooms/{room}/delete', [RoomController::class, 'delete'])->name('rooms.delete');
     Route::get('bookings/{booking}/delete', [BookingController::class, 'delete'])->name('bookings.delete');
+
+    Route::post('bookings/{booking}/services', [BookingController::class, 'addService'])->name('bookings.services.add');
+    Route::delete('bookings/{booking}/services/{bookingServiceId}', [BookingController::class, 'removeService'])->name('bookings.services.remove');
 });

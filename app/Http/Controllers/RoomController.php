@@ -95,6 +95,7 @@ class RoomController extends Controller
 
         $request->validate([
             'RoomNumber' => 'required|digits:3|unique:rooms,RoomNumber,' . $room->RoomID . ',RoomID',
+            // khin người dùng ấn sửa mà giữ nguyên phòng cũ hệ thống vẫn cho qua mà ko báo lỗi trùng số phòng
             'RoomType' => 'required|in:don,doi,vip',
             'RoomPrice' => 'required|integer|min:0',
             'RoomCapacity' => 'required|integer|min:1',

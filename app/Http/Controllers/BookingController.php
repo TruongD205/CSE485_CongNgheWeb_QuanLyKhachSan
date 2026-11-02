@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Invoice;
 use App\Models\Room;
+use App\Models\Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -71,7 +74,7 @@ class BookingController extends Controller
             ->where('BookingStatus', '!=', '2')
             ->where(function ($query) use ($newCheckIn, $newCheckOut) {
                 $query->where('CheckInDate', '<', $newCheckOut)
-                      ->whereRaw("COALESCE(CheckOutDate, '2099-12-31') > ?", [$newCheckIn]);
+                    ->whereRaw("COALESCE(CheckOutDate, '2099-12-31') > ?", [$newCheckIn]);
             })
             ->exists();
 
@@ -101,7 +104,10 @@ class BookingController extends Controller
      */
     public function show(Booking $booking)
     {
-        return view('bookings.show', compact('booking'));
+        $booking->load(['room', 'services', 'invoice']);
+        $availableServices = Service::all();
+
+        return view('bookings.show', compact('booking', 'availableServices'));
     }
 
     /**
@@ -156,13 +162,13 @@ class BookingController extends Controller
 
         $newCheckIn = $CheckInDate;
         $newCheckOut = $CheckOutDate ?: '2099-12-31';
-
-        $isOverlap = Booking::where('RoomID', $RoomID)
-            ->where('BookingID', '!=', $booking->BookingID)
-            ->where('BookingStatus', '!=', '2')
-            ->where(function ($query) use ($newCheckIn, $newCheckOut) {
+                                // trong CSDL   // biến người dùng gõ
+        $isOverlap = Booking::where('RoomID', $RoomID) // tìm những đơn đặt phòng của căn phòng này
+            ->where('BookingID', '!=', $booking->BookingID) // loại trừ đơn hiện tại đang sửa
+            ->where('BookingStatus', '!=', '2') // loại trừ đơ có trạng thái đã trả
+            ->where(function ($query) use ($newCheckIn, $newCheckOut) { // kiểm tra xem có thời gian đè lên nhau ko
                 $query->where('CheckInDate', '<', $newCheckOut)
-                      ->whereRaw("COALESCE(CheckOutDate, '2099-12-31') > ?", [$newCheckIn]);
+                    ->whereRaw("COALESCE(CheckOutDate, '2099-12-31') > ?", [$newCheckIn]);
             })
             ->exists();
 
@@ -190,6 +196,26 @@ class BookingController extends Controller
             $this->syncRoomStatus($oldRoomId);
         }
 
+        if ($BookingStatus == '2') {
+            $nights = max(1, $booking->nights() ?: 1);
+            $roomAmount = $nights * $booking->room->RoomPrice;
+            $serviceAmount = (int) $booking->services()->sum('TotalPrice');
+            $totalAmount = $roomAmount + $serviceAmount;
+
+            Invoice::updateOrCreate(
+                ['BookingID' => $booking->BookingID],
+                [
+                    'InvoiceCode'   => 'HD-' . date('Ymd') . '-' . str_pad($booking->BookingID, 4, '0', STR_PAD_LEFT),
+                    'RoomAmount'    => $roomAmount,
+                    'ServiceAmount' => $serviceAmount,
+                    'TotalAmount'   => $totalAmount,
+                    'PaymentMethod' => 'tien_mat',
+                    'PaymentStatus' => '1',
+                    'PaymentDate'   => now(),
+                ]
+            );
+        }
+
         return redirect()->route('bookings.index')->with('success', 'Đã cập nhật đặt phòng');
     }
 
@@ -213,6 +239,38 @@ class BookingController extends Controller
         $this->syncRoomStatus($roomId);
 
         return redirect()->route('bookings.index')->with('success', 'Đã xóa đặt phòng');
+    }
+
+    public function addService(Request $request, Booking $booking)
+    {
+        $request->validate([
+            'ServiceID' => 'required|exists:services,ServiceID',
+            'Quantity' => 'required|integer|min:1|max:99',
+        ], [
+            'ServiceID.required' => 'Vui lòng chọn dịch vụ.',
+            'ServiceID.exists' => 'Dịch vụ đã chọn không hợp lệ.',
+            'Quantity.required' => 'Vui lòng nhập số lượng.',
+            'Quantity.min' => 'Số lượng tối thiểu là 1.',
+        ]);
+
+        $service = Service::findOrFail($request->input('ServiceID'));
+        $quantity = (int) $request->input('Quantity');
+        $totalPrice = $service->Price * $quantity;
+
+        $booking->services()->attach($service->ServiceID, [
+            'Quantity' => $quantity,
+            'Price' => $service->Price,
+            'TotalPrice' => $totalPrice,
+        ]);
+
+        return back()->with('success', 'Đã thêm dịch vụ ' . $service->ServiceName . ' (x' . $quantity . ') vào đơn đặt phòng');
+    }
+
+    public function removeService(Booking $booking, $bookingServiceId)
+    {
+        DB::table('booking_services')->where('BookingServiceID', $bookingServiceId)->delete();
+
+        return back()->with('success', 'Đã hủy dịch vụ khỏi đơn đặt phòng');
     }
 
     private function syncRoomStatus($roomId)

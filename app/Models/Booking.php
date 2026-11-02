@@ -15,6 +15,18 @@ class Booking extends Model
     public function room()
     {
         return $this->belongsTo(Room::class, "RoomID", "RoomID");
+        // mỗi đơn đặt phòng thuộc về 1 phòng
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class, "BookingID", "BookingID");
+    }
+
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'booking_services', 'BookingID', 'ServiceID')
+                    ->withPivot('BookingServiceID', 'Quantity', 'Price', 'TotalPrice');
     }
 
     protected $casts = [

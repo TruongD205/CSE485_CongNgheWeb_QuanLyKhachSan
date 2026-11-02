@@ -9,20 +9,37 @@
 </head>
 
 <body>
-    <div class="container">
-        <div class="row justify-content-end mt-3">
-            <div class="col-auto">
-                @if (!request()->routeIs('login', 'register', 'logout.confirm'))
-                @if (Session::get('AccountID'))
-                <span class="text-muted me-2">{{ Session::get('Username') }}</span>
-                <a href="{{ route('logout.confirm') }}" class="btn btn-outline-danger btn-sm">Đăng xuất</a>
-                @endif
-                @endif
+    @if (!request()->routeIs('login', 'register', 'logout.confirm'))
+    @if (Session::get('AccountID'))
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ route('rooms.index') }}"><b>🏨 Quản Lý Khách Sạn</b></a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('rooms.*') ? 'active text-warning fw-bold' : '' }}" href="{{ route('rooms.index') }}">Phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('bookings.*') ? 'active text-warning fw-bold' : '' }}" href="{{ route('bookings.index') }}">Đặt phòng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('services.*') ? 'active text-warning fw-bold' : '' }}" href="{{ route('services.index') }}">Dịch vụ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('invoices.*') ? 'active text-warning fw-bold' : '' }}" href="{{ route('invoices.index') }}">Hóa đơn</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="text-light me-3">Xin chào, <b>{{ Session::get('Username') }}</b></span>
+                    <a href="{{ route('logout.confirm') }}" class="btn btn-outline-danger btn-sm">Đăng xuất</a>
+                </div>
             </div>
         </div>
-    </div>
+    </nav>
+    @endif
+    @endif
 
-    <div class="container mt-5">
+    <div class="container mt-4 mb-5">
         @yield('content')
     </div>
 </body>
