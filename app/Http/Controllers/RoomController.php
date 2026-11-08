@@ -71,6 +71,7 @@ class RoomController extends Controller
      */
     public function show(Room $room)
     {
+        $room->load(['bookings.invoice']);
         return view('rooms.show', compact('room'));
     }
 
@@ -132,8 +133,9 @@ class RoomController extends Controller
     {
         $activeBookings = $room->activeBookings()->orderBy('CheckInDate')->get();
         $historyCount = $room->bookings()->where('BookingStatus', '2')->count();
+        $hasInvoice = $room->bookings()->whereHas('invoice')->exists();
 
-        return view('rooms.delete', compact('room', 'activeBookings', 'historyCount'));
+        return view('rooms.delete', compact('room', 'activeBookings', 'historyCount', 'hasInvoice'));
     }
 
     /**
@@ -144,6 +146,11 @@ class RoomController extends Controller
         if ($room->activeBookings()->exists()) {
             return redirect()->route('rooms.delete', $room->RoomID)
                 ->with('error', 'Không thể xoá phòng ' . $room->RoomNumber . ' vì còn đơn đặt phòng "Đã xác nhận" hoặc "Đang ở". Hãy trả phòng hoặc xoá các đơn đó trước.');
+        }
+
+        if ($room->bookings()->whereHas('invoice')->exists()) {
+            return redirect()->route('rooms.delete', $room->RoomID)
+                ->with('error', 'Không thể xoá phòng ' . $room->RoomNumber . ' vì phòng đã phát sinh lịch sử hóa đơn tài chính!');
         }
 
         $room->delete();

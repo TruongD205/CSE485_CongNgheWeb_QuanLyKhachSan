@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="card">
-    <div class="card-header">Thêm đặt phòng mới</div>
+    <div class="card-header"><b>Thêm đặt phòng mới</b></div>
     <div class="card-body">
         <form method="post" action="{{ route('bookings.store') }}" enctype="multipart/form-data">
             @csrf
@@ -13,7 +13,7 @@
                     <select id="RoomID" class="form-select @error('RoomID') is-invalid @enderror" name="RoomID" required>
                         @foreach ($rooms as $room)
                         <option value="{{ $room->RoomID }}" {{ old('RoomID') == $room->RoomID ? 'selected' : '' }}>
-                            Phòng {{ $room->RoomNumber }} - {{ number_format($room->RoomPrice, 0, ',', '.') }} đ/đêm
+                            Phòng {{ $room->RoomNumber }} - {{ number_format($room->RoomPrice, 0, ',', '.') }} Đ/Đêm
                         </option>
                         @endforeach
                     </select>
@@ -68,7 +68,7 @@
                     @enderror
                 </div>
             </div>
-            <div class="row mb-4">
+            <div class="row mb-3">
                 <label class="col-sm-2 col-label-form">Trạng thái</label>
                 <div class="col-sm-10">
                     <select name="BookingStatus" class="form-control @error('BookingStatus') is-invalid @enderror">
@@ -81,9 +81,47 @@
                     @enderror
                 </div>
             </div>
-            <div class="text-center">
+            <div class="row mb-4">
+                <label class="col-sm-2 col-label-form">Dịch vụ sử dụng</label>
+                <div class="col-sm-10">
+                    @if (count($services) > 0)
+                    <table class="table table-bordered align-middle mb-1">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên dịch vụ</th>
+                                <th>Đơn giá</th>
+                                <th>Đơn vị tính</th>
+                                <th style="width: 140px;">Số lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($services as $service)
+                            <tr>
+                                <td>{{ $service->ServiceName }}</td>
+                                <td>{{ number_format($service->Price, 0, ',', '.') }} Đ</td>
+                                <td>{{ $service->Unit }}</td>
+                                <td>
+                                    <input type="number" name="Services[{{ $service->ServiceID }}]" aria-label="Số lượng {{ $service->ServiceName }}" class="form-control form-control-sm @error('Services.' . $service->ServiceID) is-invalid @enderror" value="{{ old('Services.' . $service->ServiceID, 0) }}" min="0" max="99" />
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <small class="text-muted">Nhập số lượng cho dịch vụ khách muốn dùng, để 0 nếu không dùng.</small>
+                    @error('Services')
+                    <div class="text-danger mt-1"><small>{{ $message }}</small></div>
+                    @enderror
+                    @error('Services.*')
+                    <div class="text-danger mt-1"><small>{{ $message }}</small></div>
+                    @enderror
+                    @else
+                    <span class="text-muted">Chưa có dịch vụ nào.</span>
+                    @endif
+                </div>
+            </div>
+            <div class="text-center mt-4">
                 <a href="{{ route('bookings.index') }}" class="btn btn-secondary me-2">Quay lại</a>
-                <input type="submit" class="btn btn-primary" value="Thêm" />
+                <input type="submit" class="btn btn-success" value="Thêm đặt phòng" />
             </div>
         </form>
     </div>

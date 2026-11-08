@@ -25,7 +25,8 @@ class BookingController extends Controller
     public function create()
     {
         $rooms = Room::all();
-        return view('bookings.create', compact('rooms'));
+        $services = Service::all();
+        return view('bookings.create', compact('rooms', 'services'));
     }
 
     /**
@@ -40,6 +41,7 @@ class BookingController extends Controller
         $CheckInDate = $request->input('CheckInDate');
         $CheckOutDate = $request->input('CheckOutDate') ?: null;
         $BookingStatus = $request->input('BookingStatus');
+        $Services = $request->input('Services') ?: [];
 
         $request->validate([
             'RoomID' => 'required|exists:rooms,RoomID',
@@ -49,6 +51,8 @@ class BookingController extends Controller
             'CheckInDate' => 'required|date|after_or_equal:today',
             'CheckOutDate' => 'nullable|required_unless:BookingStatus,1|date|after:CheckInDate',
             'BookingStatus' => 'required|in:0,1,2',
+            'Services' => 'nullable|array',
+            'Services.*' => 'nullable|integer|min:0|max:99',
         ], [
             'RoomID.required' => 'Vui lòng chọn phòng.',
             'RoomID.exists' => 'Phòng được chọn không tồn tại.',
@@ -65,6 +69,10 @@ class BookingController extends Controller
             'CheckOutDate.after' => 'Ngày trả phòng phải sau ngày nhận phòng.',
             'BookingStatus.required' => 'Vui lòng chọn trạng thái.',
             'BookingStatus.in' => 'Trạng thái đặt phòng không hợp lệ.',
+            'Services.array' => 'Danh sách dịch vụ không hợp lệ.',
+            'Services.*.integer' => 'Số lượng dịch vụ phải là số nguyên.',
+            'Services.*.min' => 'Số lượng dịch vụ không được nhỏ hơn 0.',
+            'Services.*.max' => 'Số lượng dịch vụ tối đa là 99.',
         ]);
 
         $newCheckIn = $CheckInDate;
@@ -84,7 +92,7 @@ class BookingController extends Controller
             ]);
         }
 
-        Booking::create([
+        $booking = Booking::create([
             'RoomID' => $RoomID,
             'GuestName' => $GuestName,
             'GuestPhone' => $GuestPhone,
@@ -94,7 +102,19 @@ class BookingController extends Controller
             'BookingStatus' => $BookingStatus,
         ]);
 
+        foreach (Service::whereIn('ServiceID', array_keys($Services))->get() as $service) {
+            $quantity = (int) $Services[$service->ServiceID];
+
+            if ($quantity > 0) {
+                $this->attachService($booking, $service, $quantity);
+            }
+        }
+
         $this->syncRoomStatus($RoomID);
+
+        if ($BookingStatus == '2') {
+            $this->createInvoice($booking);
+        }
 
         return redirect()->route('bookings.index')->with('success', 'Đã ghi nhận đặt phòng');
     }
@@ -179,6 +199,7 @@ class BookingController extends Controller
         }
 
         $oldRoomId = $booking->RoomID;
+        $oldStatus = $booking->BookingStatus;
 
         $booking->update([
             'RoomID' => $RoomID,
@@ -196,24 +217,8 @@ class BookingController extends Controller
             $this->syncRoomStatus($oldRoomId);
         }
 
-        if ($BookingStatus == '2') {
-            $nights = max(1, $booking->nights() ?: 1);
-            $roomAmount = $nights * $booking->room->RoomPrice;
-            $serviceAmount = (int) $booking->services()->sum('TotalPrice');
-            $totalAmount = $roomAmount + $serviceAmount;
-
-            Invoice::updateOrCreate(
-                ['BookingID' => $booking->BookingID],
-                [
-                    'InvoiceCode'   => 'HD-' . date('Ymd') . '-' . str_pad($booking->BookingID, 4, '0', STR_PAD_LEFT),
-                    'RoomAmount'    => $roomAmount,
-                    'ServiceAmount' => $serviceAmount,
-                    'TotalAmount'   => $totalAmount,
-                    'PaymentMethod' => 'tien_mat',
-                    'PaymentStatus' => '1',
-                    'PaymentDate'   => now(),
-                ]
-            );
+        if ($BookingStatus == '2' && ($oldStatus != '2' || !$booking->invoice()->exists())) {
+            $this->createInvoice($booking);
         }
 
         return redirect()->route('bookings.index')->with('success', 'Đã cập nhật đặt phòng');
@@ -224,7 +229,8 @@ class BookingController extends Controller
      */
     public function delete(Booking $booking)
     {
-        return view('bookings.delete', compact('booking'));
+        $hasInvoice = $booking->invoice()->exists();
+        return view('bookings.delete', compact('booking', 'hasInvoice'));
     }
 
     /**
@@ -232,6 +238,10 @@ class BookingController extends Controller
      */
     public function destroy(Booking $booking)
     {
+        if ($booking->invoice()->exists()) {
+            return back()->with('error', 'Đơn đặt phòng này đã xuất hóa đơn thanh toán, không thể xoá để bảo toàn số liệu kế toán!');
+        }
+
         $roomId = $booking->RoomID;
 
         $booking->delete();
@@ -239,6 +249,75 @@ class BookingController extends Controller
         $this->syncRoomStatus($roomId);
 
         return redirect()->route('bookings.index')->with('success', 'Đã xóa đặt phòng');
+    }
+
+    public function checkout(Booking $booking)
+    {
+        $booking->load(['room', 'services', 'invoice']);
+
+        $defaultCheckOutDate = $booking->CheckOutDate
+            ? (string) $booking->CheckOutDate
+            : now()->format('Y-m-d');
+
+        if ($defaultCheckOutDate < (string) $booking->CheckInDate) {
+            $defaultCheckOutDate = (string) $booking->CheckInDate;
+        }
+
+        $checkIn = \Carbon\Carbon::parse($booking->CheckInDate);
+        $checkOut = \Carbon\Carbon::parse($defaultCheckOutDate);
+        $nights = max(1, (int) $checkIn->diffInDays($checkOut));
+
+        $roomAmount = $nights * $booking->room->RoomPrice;
+        $serviceAmount = (int) $booking->services->sum('pivot.TotalPrice');
+        $totalAmount = $roomAmount + $serviceAmount;
+
+        return view('bookings.checkout', compact('booking', 'defaultCheckOutDate', 'nights', 'roomAmount', 'serviceAmount', 'totalAmount'));
+    }
+
+    public function processCheckout(Request $request, Booking $booking)
+    {
+        $checkInYmd = \Carbon\Carbon::parse($booking->CheckInDate)->format('Y-m-d');
+        $request->validate([
+            'CheckOutDate' => 'required|date|after_or_equal:' . $checkInYmd,
+            'PaymentMethod' => 'required|in:tien_mat,chuyen_khoan,the',
+            'PaymentStatus' => 'required|in:0,1',
+        ], [
+            'CheckOutDate.required' => 'Vui lòng chọn ngày trả phòng.',
+            'CheckOutDate.date' => 'Ngày trả phòng không đúng định dạng.',
+            'CheckOutDate.after_or_equal' => 'Ngày trả phòng không được trước ngày nhận phòng.',
+            'PaymentMethod.required' => 'Vui lòng chọn hình thức thanh toán.',
+            'PaymentStatus.required' => 'Vui lòng chọn trạng thái thanh toán.',
+        ]);
+
+        $checkIn = \Carbon\Carbon::parse($booking->CheckInDate);
+        $checkOut = \Carbon\Carbon::parse($request->input('CheckOutDate'));
+        $nights = max(1, (int) $checkIn->diffInDays($checkOut));
+
+        $roomAmount = $nights * $booking->room->RoomPrice;
+        $serviceAmount = (int) $booking->services()->sum('TotalPrice');
+        $totalAmount = $roomAmount + $serviceAmount;
+
+        $booking->update([
+            'CheckOutDate' => $request->input('CheckOutDate'),
+            'BookingStatus' => '2',
+        ]);
+
+        $this->syncRoomStatus($booking->RoomID);
+
+        $invoice = Invoice::updateOrCreate(
+            ['BookingID' => $booking->BookingID],
+            [
+                'InvoiceCode'   => 'HD-' . date('Ymd') . '-' . str_pad($booking->BookingID, 4, '0', STR_PAD_LEFT),
+                'RoomAmount'    => $roomAmount,
+                'ServiceAmount' => $serviceAmount,
+                'TotalAmount'   => $totalAmount,
+                'PaymentMethod' => $request->input('PaymentMethod'),
+                'PaymentStatus' => $request->input('PaymentStatus'),
+                'PaymentDate'   => now(),
+            ]
+        );
+
+        return redirect()->route('invoices.show', $invoice->InvoiceID)->with('success', 'Thanh toán thành công! Đã tạo hóa đơn ' . $invoice->InvoiceCode);
     }
 
     public function addService(Request $request, Booking $booking)
@@ -255,13 +334,8 @@ class BookingController extends Controller
 
         $service = Service::findOrFail($request->input('ServiceID'));
         $quantity = (int) $request->input('Quantity');
-        $totalPrice = $service->Price * $quantity;
 
-        $booking->services()->attach($service->ServiceID, [
-            'Quantity' => $quantity,
-            'Price' => $service->Price,
-            'TotalPrice' => $totalPrice,
-        ]);
+        $this->attachService($booking, $service, $quantity);
 
         return back()->with('success', 'Đã thêm dịch vụ ' . $service->ServiceName . ' (x' . $quantity . ') vào đơn đặt phòng');
     }
@@ -271,6 +345,36 @@ class BookingController extends Controller
         DB::table('booking_services')->where('BookingServiceID', $bookingServiceId)->delete();
 
         return back()->with('success', 'Đã hủy dịch vụ khỏi đơn đặt phòng');
+    }
+
+    private function attachService(Booking $booking, Service $service, $quantity)
+    {
+        $booking->services()->attach($service->ServiceID, [
+            'Quantity' => $quantity,
+            'Price' => $service->Price,
+            'TotalPrice' => $service->Price * $quantity,
+        ]);
+    }
+
+    private function createInvoice(Booking $booking)
+    {
+        $nights = max(1, $booking->nights() ?: 1);
+        $roomAmount = $nights * $booking->room->RoomPrice;
+        $serviceAmount = (int) $booking->services()->sum('TotalPrice');
+        $totalAmount = $roomAmount + $serviceAmount;
+
+        Invoice::updateOrCreate(
+            ['BookingID' => $booking->BookingID],
+            [
+                'InvoiceCode'   => 'HD-' . date('Ymd') . '-' . str_pad($booking->BookingID, 4, '0', STR_PAD_LEFT),
+                'RoomAmount'    => $roomAmount,
+                'ServiceAmount' => $serviceAmount,
+                'TotalAmount'   => $totalAmount,
+                'PaymentMethod' => 'tien_mat',
+                'PaymentStatus' => '1',
+                'PaymentDate'   => now(),
+            ]
+        );
     }
 
     private function syncRoomStatus($roomId)

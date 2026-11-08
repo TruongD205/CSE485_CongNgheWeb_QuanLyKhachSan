@@ -3,11 +3,11 @@
 @section('content')
 
 @if ($message = Session::get('success'))
+<div class="alert alert-success">{{ $message }}</div>
+@endif
 
-<div class="alert alert-success">
-    {{ $message }}
-</div>
-
+@if ($message = Session::get('error'))
+<div class="alert alert-danger">{{ $message }}</div>
 @endif
 
 <div class="container mt-5">
@@ -17,8 +17,7 @@
 <div class="card">
     <div class="card-header">
         <div class="row">
-            <div class="col col-md-6"><b><a href="{{ route('rooms.index') }}">Xem danh sách phòng</a></b></div>
-            <div class="col col-md-6">
+            <div class="col">
                 <a href="{{ route('bookings.create') }}" class="btn btn-success btn-sm float-end">Thêm đặt phòng mới</a>
             </div>
         </div>
@@ -45,11 +44,11 @@
                 <td>{{ $row->room->RoomNumber }}</td>
                 <td>{{ $row->GuestName }}</td>
                 <td>{{ $row->GuestPhone }}</td>
-                <td>{{ $row->CheckInDate->format('d/m/Y') }}</td>
-                <td>{{ $row->CheckOutDate ? $row->CheckOutDate->format('d/m/Y') : 'Còn đang ở' }}</td>
+                <td>{{ \Carbon\Carbon::parse($row->CheckInDate)->format('d/m/Y') }}</td>
+                <td>{{ $row->CheckOutDate ? \Carbon\Carbon::parse($row->CheckOutDate)->format('d/m/Y') : 'Còn đang ở' }}</td>
                 <td>
                     @if ($nights = $row->nights())
-                    {{ number_format($nights * $row->room->RoomPrice, 0, ',', '.') }} đ
+                    {{ number_format($nights * $row->room->RoomPrice, 0, ',', '.') }} Đ
                     @else
                     -
                     @endif
@@ -66,7 +65,7 @@
 
             @else
             <tr>
-                <td colspan="9" class="text-center">No Data Found</td>
+                <td colspan="9" class="text-center">Chưa có dữ liệu</td>
             </tr>
             @endif
         </table>

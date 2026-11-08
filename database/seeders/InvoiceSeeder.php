@@ -2,9 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Booking;
 use App\Models\Invoice;
-use App\Models\Service;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -12,45 +10,40 @@ class InvoiceSeeder extends Seeder
 {
     public function run(): void
     {
-        $bookings = Booking::with('room')->where('BookingStatus', '2')->get();
+        DB::table('booking_services')->insertOrIgnore([
+            ['BookingServiceID' => 1, 'BookingID' => 1, 'ServiceID' => 1, 'Quantity' => 3, 'Price' => 10000, 'TotalPrice' => 30000],
+            ['BookingServiceID' => 2, 'BookingID' => 1, 'ServiceID' => 2, 'Quantity' => 2, 'Price' => 15000, 'TotalPrice' => 30000],
+            ['BookingServiceID' => 3, 'BookingID' => 2, 'ServiceID' => 5, 'Quantity' => 3, 'Price' => 60000, 'TotalPrice' => 180000],
+            ['BookingServiceID' => 4, 'BookingID' => 2, 'ServiceID' => 3, 'Quantity' => 2, 'Price' => 30000, 'TotalPrice' => 60000],
+            ['BookingServiceID' => 5, 'BookingID' => 3, 'ServiceID' => 1, 'Quantity' => 2, 'Price' => 10000, 'TotalPrice' => 20000],
+            ['BookingServiceID' => 6, 'BookingID' => 3, 'ServiceID' => 5, 'Quantity' => 2, 'Price' => 60000, 'TotalPrice' => 120000],
+            ['BookingServiceID' => 7, 'BookingID' => 4, 'ServiceID' => 4, 'Quantity' => 1, 'Price' => 150000, 'TotalPrice' => 150000],
+        ]);
 
-        if ($bookings->isEmpty()) {
-            $bookings = Booking::with('room')->take(2)->get();
-        }
+        Invoice::updateOrCreate(
+            ['BookingID' => 1],
+            [
+                'InvoiceCode'   => 'HD-20261102-0001',
+                'RoomAmount'    => 1350000,
+                'ServiceAmount' => 60000,
+                'TotalAmount'   => 1410000,
+                'PaymentMethod' => 'tien_mat',
+                'PaymentStatus' => '1',
+                'PaymentDate'   => '2026-11-02 10:00:00',
+            ]
+        );
 
-        $services = Service::all();
-
-        foreach ($bookings as $booking) {
-            if (!$booking->room) {
-                continue;
-            }
-
-            if ($services->count() >= 2 && !DB::table('booking_services')->where('BookingID', $booking->BookingID)->exists()) {
-                $s1 = $services[0]; // Nước suối
-                $s2 = $services[1]; // Coca
-                DB::table('booking_services')->insert([
-                    ['BookingID' => $booking->BookingID, 'ServiceID' => $s1->ServiceID, 'Quantity' => 3, 'Price' => $s1->Price, 'TotalPrice' => $s1->Price * 3],
-                    ['BookingID' => $booking->BookingID, 'ServiceID' => $s2->ServiceID, 'Quantity' => 1, 'Price' => $s2->Price, 'TotalPrice' => $s2->Price * 1],
-                ]);
-            }
-
-            $serviceAmount = (int) DB::table('booking_services')->where('BookingID', $booking->BookingID)->sum('TotalPrice');
-            $nights = max(1, $booking->nights() ?: 2);
-            $roomAmount = $nights * $booking->room->RoomPrice;
-            $totalAmount = $roomAmount + $serviceAmount;
-
-            Invoice::updateOrCreate(
-                ['BookingID' => $booking->BookingID],
-                [
-                    'InvoiceCode'   => 'HD-' . date('Ymd') . '-' . str_pad($booking->BookingID, 4, '0', STR_PAD_LEFT),
-                    'RoomAmount'    => $roomAmount,
-                    'ServiceAmount' => $serviceAmount,
-                    'TotalAmount'   => $totalAmount,
-                    'PaymentMethod' => 'tien_mat',
-                    'PaymentStatus' => '1',
-                    'PaymentDate'   => now(),
-                ]
-            );
-        }
+        Invoice::updateOrCreate(
+            ['BookingID' => 2],
+            [
+                'InvoiceCode'   => 'HD-20261103-0002',
+                'RoomAmount'    => 2400000,
+                'ServiceAmount' => 240000,
+                'TotalAmount'   => 2640000,
+                'PaymentMethod' => 'chuyen_khoan',
+                'PaymentStatus' => '1',
+                'PaymentDate'   => '2026-11-03 14:30:00',
+            ]
+        );
     }
 }

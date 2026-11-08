@@ -2,67 +2,119 @@
 
 @section('content')
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow border-success">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><b>HÓA ĐƠN THANH TOÁN ({{ $invoice->InvoiceCode }})</b></h5>
-                <span class="badge bg-light text-success fs-6">Đã thanh toán</span>
+<div class="card">
+    <div class="card-header"><b>Chi tiết hóa đơn thanh toán</b></div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Mã hóa đơn</b></label>
+            <div class="col-sm-10">
+                {{ $invoice->InvoiceCode }}
             </div>
-            <div class="card-body p-4">
-                <div class="row mb-4 border-bottom pb-3">
-                    <div class="col-6">
-                        <h4 class="text-primary mb-1"><b>Khách Sạn Grand Hotel</b></h4>
-                        <p class="text-muted mb-0">Địa chỉ: 123 Đường Biển, TP. Đà Nẵng</p>
-                        <p class="text-muted">Hotline: 1900 6868</p>
-                    </div>
-                    <div class="col-6 text-end">
-                        <p class="mb-1"><b>Mã hóa đơn:</b> {{ $invoice->InvoiceCode }}</p>
-                        <p class="mb-1"><b>Ngày xuất:</b> {{ $invoice->PaymentDate->format('d/m/Y H:i:s') }}</p>
-                        <p class="mb-0"><b>Hình thức:</b> 
-                            @if ($invoice->PaymentMethod == 'tien_mat') Tiền mặt @elseif ($invoice->PaymentMethod == 'chuyen_khoan') Chuyển khoản @else Thẻ @endif
-                        </p>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <h6 class="text-muted">THÔNG TIN KHÁCH HÀNG:</h6>
-                    <p class="mb-1"><b>Họ tên khách:</b> {{ $invoice->booking ? $invoice->booking->GuestName : 'Khách vãng lai' }}</p>
-                    <p class="mb-1"><b>Số điện thoại:</b> {{ $invoice->booking ? $invoice->booking->GuestPhone : '-' }}</p>
-                    <p class="mb-0"><b>Phòng lưu trú:</b> {{ $invoice->booking && $invoice->booking->room ? 'Phòng ' . $invoice->booking->room->RoomNumber . ' (' . number_format($invoice->booking->room->RoomPrice, 0, ',', '.') . ' đ/đêm)' : '-' }}</p>
-                </div>
-
-                <table class="table table-bordered mb-4">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Mục thanh toán</th>
-                            <th class="text-end" style="width: 200px;">Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Tiền thuê phòng ({{ $invoice->booking ? $invoice->booking->nights() : 1 }} đêm)</td>
-                            <td class="text-end">{{ number_format($invoice->RoomAmount, 0, ',', '.') }} đ</td>
-                        </tr>
-                        <tr>
-                            <td>Tiền dịch vụ phát sinh</td>
-                            <td class="text-end">{{ number_format($invoice->ServiceAmount, 0, ',', '.') }} đ</td>
-                        </tr>
-                        <tr class="table-warning">
-                            <td><b>TỔNG CỘNG THANH TOÁN</b></td>
-                            <td class="text-end text-danger fs-5"><b>{{ number_format($invoice->TotalAmount, 0, ',', '.') }} đ</b></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="text-center mt-4">
-                    <a href="{{ route('invoices.index') }}" class="btn btn-secondary me-2">Quay lại danh sách</a>
-                    <button onclick="window.print()" class="btn btn-primary">In hóa đơn</button>
-                </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Khách hàng</b></label>
+            <div class="col-sm-10">
+                {{ $invoice->booking ? $invoice->booking->GuestName : 'Khách vãng lai' }}
             </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Điện thoại</b></label>
+            <div class="col-sm-10">
+                {{ $invoice->booking ? $invoice->booking->GuestPhone : '-' }}
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Phòng</b></label>
+            <div class="col-sm-10">
+                {{ $invoice->booking && $invoice->booking->room ? 'Phòng ' . $invoice->booking->room->RoomNumber : '-' }}
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Ngày thanh toán</b></label>
+            <div class="col-sm-10">
+                {{ $invoice->PaymentDate ? \Carbon\Carbon::parse($invoice->PaymentDate)->format('d/m/Y H:i:s') : '-' }}
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Hình thức</b></label>
+            <div class="col-sm-10">
+                @if ($invoice->PaymentMethod == 'tien_mat') Tiền mặt @elseif ($invoice->PaymentMethod == 'chuyen_khoan') Chuyển khoản @else Thẻ @endif
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Trạng thái</b></label>
+            <div class="col-sm-10">
+                @if ($invoice->PaymentStatus == '1') Đã thanh toán @else Chưa thanh toán @endif
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Tiền phòng</b></label>
+            <div class="col-sm-10">
+                {{ number_format($invoice->RoomAmount, 0, ',', '.') }} Đ
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label class="col-sm-2 col-label-form"><b>Tiền dịch vụ</b></label>
+            <div class="col-sm-10">
+                {{ number_format($invoice->ServiceAmount, 0, ',', '.') }} Đ
+            </div>
+        </div>
+        <div class="row mb-4">
+            <label class="col-sm-2 col-label-form"><b>Tổng tiền</b></label>
+            <div class="col-sm-10">
+                {{ number_format($invoice->TotalAmount, 0, ',', '.') }} Đ
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{{ route('invoices.index') }}" class="btn btn-secondary me-2">Quay lại</a>
+            @if ($invoice->PaymentStatus == '0')
+            <form method="post" action="{{ route('invoices.pay', $invoice->InvoiceID) }}" class="d-inline" onsubmit="return confirm('Xác nhận hóa đơn này đã được thanh toán?');">
+                @csrf
+                <button type="submit" class="btn btn-success">Xác nhận thu tiền</button>
+            </form>
+            @endif
         </div>
     </div>
 </div>
 
-@endsection
+<div class="card mt-4">
+    <div class="card-header">
+        <b>Bảng kê chi tiết thanh toán</b>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <tr>
+                <th>Mục thanh toán</th>
+                <th>Số lượng</th>
+                <th>Đơn giá</th>
+                <th>Thành tiền</th>
+            </tr>
+            @php
+                $nights = max(1, $invoice->booking ? $invoice->booking->nights() : 1);
+                $roomUnitPrice = $invoice->RoomAmount > 0 ? (int)($invoice->RoomAmount / $nights) : ($invoice->booking && $invoice->booking->room ? $invoice->booking->room->RoomPrice : 0);
+            @endphp
+            <tr>
+                <td>Tiền thuê phòng ({{ $invoice->booking && $invoice->booking->room ? 'Phòng ' . $invoice->booking->room->RoomNumber : '-' }})</td>
+                <td>{{ $nights }} Đêm</td>
+                <td>{{ number_format($roomUnitPrice, 0, ',', '.') }} Đ</td>
+                <td>{{ number_format($invoice->RoomAmount, 0, ',', '.') }} Đ</td>
+            </tr>
+            @if ($invoice->booking && $invoice->booking->services->count() > 0)
+            @foreach ($invoice->booking->services as $svc)
+            <tr>
+                <td>{{ $svc->ServiceName }}</td>
+                <td>{{ $svc->pivot->Quantity }} {{ $svc->Unit }}</td>
+                <td>{{ number_format($svc->pivot->Price, 0, ',', '.') }} Đ</td>
+                <td>{{ number_format($svc->pivot->TotalPrice, 0, ',', '.') }} Đ</td>
+            </tr>
+            @endforeach
+            @endif
+            <tr>
+                <td colspan="3"><b>Tổng cộng thanh toán</b></td>
+                <td>{{ number_format($invoice->TotalAmount, 0, ',', '.') }} Đ</td>
+            </tr>
+        </table>
+    </div>
+</div>
 
+@endsection

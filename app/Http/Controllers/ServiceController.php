@@ -12,6 +12,12 @@ class ServiceController extends Controller
         return view('services.index', ['services' => Service::paginate(10)]);
     }
 
+    public function show(Service $service)
+    {
+        $service->load(['bookings.room']);
+        return view('services.show', compact('service'));
+    }
+
     public function create()
     {
         return view('services.create');
@@ -20,12 +26,13 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ServiceName' => 'required|max:255',
+            'ServiceName' => 'required|max:255|unique:services,ServiceName',
             'Price' => 'required|integer|min:0',
             'Unit' => 'required|max:50',
             'Description' => 'nullable',
         ], [
             'ServiceName.required' => 'Vui lòng nhập tên dịch vụ.',
+            'ServiceName.unique' => 'Tên dịch vụ này đã tồn tại trong hệ thống.',
             'Price.required' => 'Vui lòng nhập giá dịch vụ.',
             'Price.integer' => 'Giá dịch vụ phải là số nguyên.',
             'Price.min' => 'Giá dịch vụ không được nhỏ hơn 0.',
@@ -50,12 +57,13 @@ class ServiceController extends Controller
     public function update(Request $request, Service $service)
     {
         $request->validate([
-            'ServiceName' => 'required|max:255',
+            'ServiceName' => 'required|max:255|unique:services,ServiceName,' . $service->ServiceID . ',ServiceID',
             'Price' => 'required|integer|min:0',
             'Unit' => 'required|max:50',
             'Description' => 'nullable',
         ], [
             'ServiceName.required' => 'Vui lòng nhập tên dịch vụ.',
+            'ServiceName.unique' => 'Tên dịch vụ này đã tồn tại trong hệ thống.',
             'Price.required' => 'Vui lòng nhập giá dịch vụ.',
             'Price.integer' => 'Giá dịch vụ phải là số nguyên.',
             'Price.min' => 'Giá dịch vụ không được nhỏ hơn 0.',

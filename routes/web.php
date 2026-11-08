@@ -28,6 +28,10 @@ Route::middleware('dangnhap')->group(function () {
     Route::get('rooms/{room}/delete', [RoomController::class, 'delete'])->name('rooms.delete');
     Route::get('bookings/{booking}/delete', [BookingController::class, 'delete'])->name('bookings.delete');
 
+    Route::get('bookings/{booking}/checkout', [BookingController::class, 'checkout'])->name('bookings.checkout');
+    Route::post('bookings/{booking}/checkout', [BookingController::class, 'processCheckout'])->name('bookings.checkout.process');
+    Route::post('invoices/{invoice}/pay', [InvoiceController::class, 'markAsPaid'])->name('invoices.pay');
+
     Route::post('bookings/{booking}/services', [BookingController::class, 'addService'])->name('bookings.services.add');
     Route::delete('bookings/{booking}/services/{bookingServiceId}', [BookingController::class, 'removeService'])->name('bookings.services.remove');
 });

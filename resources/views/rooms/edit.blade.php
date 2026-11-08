@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="card">
-    <div class="card-header">Sửa thông tin phòng</div>
+    <div class="card-header"><b>Sửa thông tin phòng</b></div>
     <div class="card-body">
         <form method="post" action="{{ route('rooms.update', $room->RoomID) }}" enctype="multipart/form-data">
             @csrf
@@ -31,7 +31,7 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label class="col-sm-2 col-label-form">Giá phòng (đ/đêm)</label>
+                <label class="col-sm-2 col-label-form">Giá phòng (Đ/Đêm)</label>
                 <div class="col-sm-10">
                     <input type="number" name="RoomPrice" class="form-control @error('RoomPrice') is-invalid @enderror" min="0" step="10000"
                         value="{{ old('RoomPrice', $room->RoomPrice) }}" />
@@ -41,7 +41,7 @@
                 </div>
             </div>
             <div class="row mb-3">
-                <label class="col-sm-2 col-label-form">Sức chứa (người)</label>
+                <label class="col-sm-2 col-label-form">Sức chứa (Người)</label>
                 <div class="col-sm-10">
                     <input type="number" name="RoomCapacity" class="form-control @error('RoomCapacity') is-invalid @enderror" min="1" max="20"
                         value="{{ old('RoomCapacity', $room->RoomCapacity) }}" />
@@ -67,9 +67,9 @@
                     @enderror
                 </div>
             </div>
-            <div class="text-center">
+            <div class="text-center mt-4">
                 <a href="{{ route('rooms.index') }}" class="btn btn-secondary me-2">Quay lại</a>
-                <input type="submit" class="btn btn-primary" value="Sửa" />
+                <input type="submit" class="btn btn-warning" value="Lưu thay đổi" />
             </div>
         </form>
     </div>

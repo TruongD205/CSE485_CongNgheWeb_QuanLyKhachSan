@@ -10,91 +10,61 @@ class BookingSeeder extends Seeder
 {
     public function run(): void
     {
-        $today = now();
-
         $bookings = [
             [
-                '101',
-                'Đặng Nguyên Trường',
-                '0905123456',
-                'truongdn@gmail.com',
-                $today->copy()->subDays(6)->toDateString(),
-                $today->copy()->subDays(3)->toDateString(),
-                '2'
+                'BookingID'     => 1,
+                'RoomID'        => 1,
+                'GuestName'     => 'Đặng Nguyên Trường',
+                'GuestPhone'    => '0905123456',
+                'GuestEmail'    => 'truongdn@gmail.com',
+                'CheckInDate'   => '2026-10-30',
+                'CheckOutDate'  => '2026-11-02',
+                'BookingStatus' => '2',
             ],
             [
-                '102',
-                'Nguyễn Đình Kiên',
-                '0912777888',
-                'kiennd@gmail.com',
-                $today->copy()->subDays(2)->toDateString(),
-                $today->copy()->addDays(2)->toDateString(),
-                '1'
+                'BookingID'     => 2,
+                'RoomID'        => 3,
+                'GuestName'     => 'Nguyễn Quỳnh Chi',
+                'GuestPhone'    => '0918999888',
+                'GuestEmail'    => 'quynhchi@gmail.com',
+                'CheckInDate'   => '2026-10-31',
+                'CheckOutDate'  => '2026-11-03',
+                'BookingStatus' => '2',
             ],
             [
-                '201',
-                'Nguyễn Đình Đạt',
-                '0938444555',
-                'datnd@gmail.com',
-                $today->toDateString(),
-                $today->copy()->addDays(3)->toDateString(),
-                '1'
+                'BookingID'     => 3,
+                'RoomID'        => 5,
+                'GuestName'     => 'Nguyễn Đình Kiên',
+                'GuestPhone'    => '0912777888',
+                'GuestEmail'    => 'kiennd@gmail.com',
+                'CheckInDate'   => '2026-11-03',
+                'CheckOutDate'  => '2026-11-07',
+                'BookingStatus' => '1',
             ],
             [
-                '202',
-                'Phạm Văn Nam',
-                '0977000111',
-                'nam.pv@gmail.com',
-                $today->copy()->addDays(3)->toDateString(),
-                $today->copy()->addDays(6)->toDateString(),
-                '0'
+                'BookingID'     => 4,
+                'RoomID'        => 2,
+                'GuestName'     => 'Nguyễn Cao Phước',
+                'GuestPhone'    => '0966123789',
+                'GuestEmail'    => 'phuocnc@gmail.com',
+                'CheckInDate'   => '2026-11-04',
+                'CheckOutDate'  => '2026-11-08',
+                'BookingStatus' => '1',
             ],
             [
-                '301',
-                'Nguyễn Thắng Đức An',
-                '0982333444',
-                'anntd@gmail.com',
-                $today->copy()->addDays(5)->toDateString(),
-                $today->copy()->addDays(8)->toDateString(),
-                '0'
-            ],
-            [
-                '103',
-                'Nguyễn Cao Phước',
-                '0966123789',
-                'phuocnc@gmail.com',
-                $today->copy()->subDays(1)->toDateString(),
-                $today->copy()->addDays(2)->toDateString(),
-                '1'
-            ],
-            [
-                '203',
-                'Bùi Quang Vinh',
-                '0978333999',
-                'vinhbq@gmail.com',
-                $today->copy()->addDays(4)->toDateString(),
-                $today->copy()->addDays(7)->toDateString(),
-                '0'
+                'BookingID'     => 5,
+                'RoomID'        => 4,
+                'GuestName'     => 'Phạm Văn Nam',
+                'GuestPhone'    => '0977000111',
+                'GuestEmail'    => 'nam.pv@gmail.com',
+                'CheckInDate'   => '2026-11-07',
+                'CheckOutDate'  => '2026-11-10',
+                'BookingStatus' => '0',
             ],
         ];
 
-        foreach ($bookings as $booking) {
-            $room = Room::where('RoomNumber', $booking[0])->first();
-
-            if (!$room) {
-                continue;
-            }
-
-            Booking::updateOrCreate(
-                ['RoomID' => $room->RoomID, 'GuestPhone' => $booking[2]],
-                [
-                    'GuestName' => $booking[1],
-                    'GuestEmail' => $booking[3],
-                    'CheckInDate' => $booking[4],
-                    'CheckOutDate' => $booking[5],
-                    'BookingStatus' => $booking[6],
-                ]
-            );
+        foreach ($bookings as $b) {
+            Booking::updateOrCreate(['BookingID' => $b['BookingID']], $b);
         }
 
         foreach (Room::pluck('RoomID') as $roomId) {

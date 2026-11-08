@@ -12,10 +12,6 @@ class Invoice extends Model
 
     protected $primaryKey = 'InvoiceID';
 
-    protected $casts = [
-        'PaymentDate' => 'datetime',
-    ];
-
     protected $fillable = [
         'InvoiceID',
         'InvoiceCode',
@@ -33,4 +29,3 @@ class Invoice extends Model
         return $this->belongsTo(Booking::class, 'BookingID', 'BookingID');
     }
 }
-

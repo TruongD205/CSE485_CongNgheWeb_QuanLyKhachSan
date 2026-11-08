@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,7 +16,6 @@ class Booking extends Model
     public function room()
     {
         return $this->belongsTo(Room::class, "RoomID", "RoomID");
-        // mỗi đơn đặt phòng thuộc về 1 phòng
     }
 
     public function invoice()
@@ -29,19 +29,14 @@ class Booking extends Model
                     ->withPivot('BookingServiceID', 'Quantity', 'Price', 'TotalPrice');
     }
 
-    protected $casts = [
-        'CheckInDate' => 'date',
-        'CheckOutDate' => 'date',
-    ];
-
     protected $fillable = ['BookingID', 'RoomID', 'GuestName', 'GuestPhone', 'GuestEmail', 'CheckInDate', 'CheckOutDate', 'BookingStatus'];
 
     public function nights()
     {
-        if (!$this->CheckOutDate) {
+        if (!$this->CheckOutDate || !$this->CheckInDate) {
             return null;
         }
 
-        return (int) $this->CheckInDate->diffInDays($this->CheckOutDate);
+        return (int) Carbon::parse($this->CheckInDate)->diffInDays(Carbon::parse($this->CheckOutDate));
     }
 }

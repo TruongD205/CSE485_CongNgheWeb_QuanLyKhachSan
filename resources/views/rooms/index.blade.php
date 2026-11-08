@@ -3,11 +3,11 @@
 @section('content')
 
 @if ($message = Session::get('success'))
+<div class="alert alert-success">{{ $message }}</div>
+@endif
 
-<div class="alert alert-success">
-    {{ $message }}
-</div>
-
+@if ($message = Session::get('error'))
+<div class="alert alert-danger">{{ $message }}</div>
 @endif
 
 <div class="container mt-5">
@@ -17,8 +17,7 @@
 <div class="card">
     <div class="card-header">
         <div class="row">
-            <div class="col col-md-6"><b><a href="{{ route('bookings.index') }}">Xem đặt phòng</a></b></div>
-            <div class="col col-md-6">
+            <div class="col">
                 <a href="{{ route('rooms.create') }}" class="btn btn-success btn-sm float-end">Thêm phòng mới</a>
             </div>
         </div>
@@ -42,8 +41,8 @@
                 <td>{{ $row->RoomID }}</td>
                 <td>{{ $row->RoomNumber }}</td>
                 <td> @if ($row->RoomType == 'don') Phòng đơn @elseif ($row->RoomType == 'doi') Phòng đôi @else Phòng VIP @endif </td>
-                <td>{{ number_format($row->RoomPrice, 0, ',', '.') }} đ</td>
-                <td>{{ $row->RoomCapacity }} người</td>
+                <td>{{ number_format($row->RoomPrice, 0, ',', '.') }} Đ</td>
+                <td>{{ $row->RoomCapacity }} Người</td>
                 <td> @if ($row->RoomStatus == 0) Trống @elseif ($row->RoomStatus == 1) Đã đặt @else Đang ở @endif </td>
                 <td>
                     <a href="{{ route('rooms.show', $row->RoomID) }}" class="btn btn-primary btn-sm">Xem chi tiết</a>
@@ -57,7 +56,7 @@
 
             @else
             <tr>
-                <td colspan="7" class="text-center">No Data Found</td>
+                <td colspan="7" class="text-center">Chưa có dữ liệu</td>
             </tr>
             @endif
         </table>

@@ -11,14 +11,7 @@
 @endif
 
 <div class="card">
-    <div class="card-header">
-        <div class="row">
-            <div class="col col-md-6"><b>Thông tin đặt phòng chi tiết</b></div>
-            <div class="col col-md-6">
-                <a href="{{ route('bookings.index') }}" class="btn btn-primary btn-sm float-end">Xem tất cả danh sách</a>
-            </div>
-        </div>
-    </div>
+    <div class="card-header"><b>Thông tin đặt phòng chi tiết</b></div>
     <div class="card-body">
         <div class="row mb-3">
             <label class="col-sm-2 col-label-form"><b>Mã đặt phòng</b></label>
@@ -37,7 +30,7 @@
                 @else
                 Phòng VIP
                 @endif
-                - {{ number_format($booking->room->RoomPrice, 0, ',', '.') }} đ/đêm
+                - {{ number_format($booking->room->RoomPrice, 0, ',', '.') }} Đ/Đêm
             </div>
         </div>
         <div class="row mb-3">
@@ -61,26 +54,26 @@
         <div class="row mb-3">
             <label class="col-sm-2 col-label-form"><b>Ngày nhận phòng</b></label>
             <div class="col-sm-10">
-                {{ $booking->CheckInDate->format('d/m/Y') }}
+                {{ \Carbon\Carbon::parse($booking->CheckInDate)->format('d/m/Y') }}
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-2 col-label-form"><b>Ngày trả phòng</b></label>
             <div class="col-sm-10">
-                {{ $booking->CheckOutDate ? $booking->CheckOutDate->format('d/m/Y') : 'Chưa trả phòng' }}
+                {{ $booking->CheckOutDate ? \Carbon\Carbon::parse($booking->CheckOutDate)->format('d/m/Y') : 'Chưa trả phòng' }}
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-2 col-label-form"><b>Số đêm</b></label>
             <div class="col-sm-10">
-                {{ $booking->nights() ? $booking->nights() . ' đêm' : 'Chưa xác định' }}
+                {{ $booking->nights() ? $booking->nights() . ' Đêm' : 'Chưa xác định' }}
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-2 col-label-form"><b>Tạm tính</b></label>
             <div class="col-sm-10">
                 @if ($nights = $booking->nights())
-                {{ number_format($nights * $booking->room->RoomPrice, 0, ',', '.') }} đ
+                {{ number_format($nights * $booking->room->RoomPrice, 0, ',', '.') }} Đ
                 @else
                 -
                 @endif
@@ -98,57 +91,58 @@
                 @endif
             </div>
         </div>
-        <div class="text-center">
-            <a href="{{ route('bookings.index') }}" class="btn btn-secondary">Quay lại</a>
+        <div class="text-center mt-4">
+            <a href="{{ route('bookings.index') }}" class="btn btn-secondary me-2">Quay lại</a>
+            @if ($booking->BookingStatus != 2)
+            <a href="{{ route('bookings.checkout', $booking->BookingID) }}" class="btn btn-success">Thanh toán & Trả phòng</a>
+            @endif
         </div>
     </div>
 </div>
 
-<div class="card mt-4 shadow-sm border-info">
-    <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><b>Dịch vụ khách đã sử dụng</b></h5>
-        <span class="badge bg-light text-dark">
-            Tổng tiền dịch vụ: <b>{{ number_format($booking->services->sum('pivot.TotalPrice'), 0, ',', '.') }} đ</b>
-        </span>
+<div class="card mt-4">
+    <div class="card-header">
+        <div class="row">
+            <div class="col col-md-6"><b>Dịch vụ khách đã sử dụng</b></div>
+            <div class="col col-md-6 text-end">
+                Tổng tiền dịch vụ: {{ number_format($booking->services->sum('pivot.TotalPrice'), 0, ',', '.') }} Đ
+            </div>
+        </div>
     </div>
     <div class="card-body">
-        <table class="table table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Tên dịch vụ</th>
-                    <th>Đơn giá</th>
-                    <th>Số lượng</th>
-                    <th>Thành tiền</th>
-                    @if ($booking->BookingStatus != 2)
-                    <th style="width: 80px;">Hủy</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody>
-                @if ($booking->services->count() > 0)
-                @foreach ($booking->services as $svc)
-                <tr>
-                    <td><b>{{ $svc->ServiceName }}</b></td>
-                    <td>{{ number_format($svc->pivot->Price, 0, ',', '.') }} đ / {{ $svc->Unit }}</td>
-                    <td><span class="badge bg-primary fs-6">{{ $svc->pivot->Quantity }}</span> {{ $svc->Unit }}</td>
-                    <td class="text-danger"><b>{{ number_format($svc->pivot->TotalPrice, 0, ',', '.') }} đ</b></td>
-                    @if ($booking->BookingStatus != 2)
-                    <td>
-                        <form method="post" action="{{ route('bookings.services.remove', [$booking->BookingID, $svc->pivot->BookingServiceID]) }}" onsubmit="return confirm('Bạn có chắc chắn muốn hủy dịch vụ này?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm">X</button>
-                        </form>
-                    </td>
-                    @endif
-                </tr>
-                @endforeach
-                @else
-                <tr>
-                    <td colspan="{{ $booking->BookingStatus != 2 ? 5 : 4 }}" class="text-center text-muted">Chưa có dịch vụ nào được gọi</td>
-                </tr>
+        <table class="table table-bordered">
+            <tr>
+                <th>Tên dịch vụ</th>
+                <th>Đơn giá</th>
+                <th>Số lượng</th>
+                <th>Thành tiền</th>
+                @if ($booking->BookingStatus != 2)
+                <th>Thao tác</th>
                 @endif
-            </tbody>
+            </tr>
+            @if ($booking->services->count() > 0)
+            @foreach ($booking->services as $svc)
+            <tr>
+                <td>{{ $svc->ServiceName }}</td>
+                <td>{{ number_format($svc->pivot->Price, 0, ',', '.') }} Đ / {{ $svc->Unit }}</td>
+                <td>{{ $svc->pivot->Quantity }} {{ $svc->Unit }}</td>
+                <td>{{ number_format($svc->pivot->TotalPrice, 0, ',', '.') }} Đ</td>
+                @if ($booking->BookingStatus != 2)
+                <td>
+                    <form method="post" action="{{ route('bookings.services.remove', [$booking->BookingID, $svc->pivot->BookingServiceID]) }}" onsubmit="return confirm('Bạn có chắc chắn muốn hủy dịch vụ này?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                    </form>
+                </td>
+                @endif
+            </tr>
+            @endforeach
+            @else
+            <tr>
+                <td colspan="{{ $booking->BookingStatus != 2 ? 5 : 4 }}" class="text-center">Chưa có dịch vụ nào</td>
+            </tr>
+            @endif
         </table>
 
         @if ($booking->BookingStatus != 2 && isset($availableServices) && $availableServices->count() > 0)
@@ -161,7 +155,7 @@
                 <select name="ServiceID" class="form-select" required>
                     <option value="">-- Chọn dịch vụ --</option>
                     @foreach ($availableServices as $asvc)
-                    <option value="{{ $asvc->ServiceID }}">{{ $asvc->ServiceName }} ({{ number_format($asvc->Price, 0, ',', '.') }} đ / {{ $asvc->Unit }})</option>
+                    <option value="{{ $asvc->ServiceID }}">{{ $asvc->ServiceName }} ({{ number_format($asvc->Price, 0, ',', '.') }} Đ / {{ $asvc->Unit }})</option>
                     @endforeach
                 </select>
             </div>
@@ -178,57 +172,61 @@
 </div>
 
 @if ($booking->invoice)
-<div class="card mt-4 border-success">
-    <div class="card-header bg-success text-white">
-        <h5 class="mb-0"><b>Thông tin hóa đơn thanh toán ({{ $booking->invoice->InvoiceCode }})</b></h5>
+<div class="card mt-4">
+    <div class="card-header">
+        <b>Thông tin hóa đơn thanh toán</b>
     </div>
     <div class="card-body">
         <div class="row mb-3">
             <label class="col-sm-3 col-label-form"><b>Mã hóa đơn:</b></label>
             <div class="col-sm-9">
-                <span class="badge bg-primary fs-6">{{ $booking->invoice->InvoiceCode }}</span>
+                <a href="{{ route('invoices.show', $booking->invoice->InvoiceID) }}">{{ $booking->invoice->InvoiceCode }}</a>
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-3 col-label-form"><b>Tiền phòng:</b></label>
             <div class="col-sm-9">
-                {{ number_format($booking->invoice->RoomAmount, 0, ',', '.') }} đ
+                {{ number_format($booking->invoice->RoomAmount, 0, ',', '.') }} Đ
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-3 col-label-form"><b>Tiền dịch vụ:</b></label>
             <div class="col-sm-9">
-                {{ number_format($booking->invoice->ServiceAmount, 0, ',', '.') }} đ
+                {{ number_format($booking->invoice->ServiceAmount, 0, ',', '.') }} Đ
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-3 col-label-form"><b>Tổng tiền thanh toán:</b></label>
-            <div class="col-sm-9 text-danger fs-5">
-                <b>{{ number_format($booking->invoice->TotalAmount, 0, ',', '.') }} đ</b>
+            <div class="col-sm-9">
+                {{ number_format($booking->invoice->TotalAmount, 0, ',', '.') }} Đ
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-3 col-label-form"><b>Hình thức thanh toán:</b></label>
             <div class="col-sm-9">
                 @if ($booking->invoice->PaymentMethod == 'tien_mat')
-                <span class="badge bg-secondary">Tiền mặt</span>
+                Tiền mặt
                 @elseif ($booking->invoice->PaymentMethod == 'chuyen_khoan')
-                <span class="badge bg-info text-dark">Chuyển khoản</span>
+                Chuyển khoản
                 @else
-                <span class="badge bg-warning text-dark">Thẻ</span>
+                Thẻ
                 @endif
             </div>
         </div>
         <div class="row mb-3">
             <label class="col-sm-3 col-label-form"><b>Trạng thái:</b></label>
             <div class="col-sm-9">
-                <span class="badge bg-success">Đã thanh toán</span>
+                @if ($booking->invoice->PaymentStatus == '1')
+                Đã thanh toán
+                @else
+                Chưa thanh toán
+                @endif
             </div>
         </div>
         <div class="row mb-2">
             <label class="col-sm-3 col-label-form"><b>Thời điểm thanh toán:</b></label>
-            <div class="col-sm-9 text-muted">
-                {{ $booking->invoice->PaymentDate->format('d/m/Y H:i:s') }}
+            <div class="col-sm-9">
+                {{ \Carbon\Carbon::parse($booking->invoice->PaymentDate)->format('d/m/Y H:i:s') }}
             </div>
         </div>
     </div>

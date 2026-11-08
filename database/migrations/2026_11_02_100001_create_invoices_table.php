@@ -24,7 +24,7 @@ return new class extends Migration
             $table->enum('PaymentStatus', ['0', '1'])->default('1');
             $table->dateTime('PaymentDate');
 
-            $table->foreign('BookingID')->references('BookingID')->on('bookings')->onDelete('cascade');
+            $table->foreign('BookingID')->references('BookingID')->on('bookings')->onDelete('restrict');
         });
     }
 
